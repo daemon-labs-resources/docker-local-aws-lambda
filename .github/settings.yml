@@ -1,8 +1,8 @@
 repository:
-  name: workshop-template
-  description: Workshop template
-  homepage: https://github.com/daemon-labs-resources/workshop-template
-  topics: daemon-labs, daemon-labs-resources, workshop-template
+  name: docker-local-aws-lambda
+  description: Learn to build and develop AWS Lambda functions locally with Docker
+  homepage: https://github.com/daemon-labs-resources/docker-local-aws-lambda
+  topics: daemon-labs, daemon-labs-resources, docker-local-aws-lambda
   private: true
   has_issues: true
   has_projects: false
