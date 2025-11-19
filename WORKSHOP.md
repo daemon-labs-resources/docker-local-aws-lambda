@@ -33,7 +33,7 @@ Workshop description.
    ---
    services:
      lambda:
-         build: .
+       build: .
    ```
 
    > You'll also notice that we're mounting a volume, this is to ensure any generated files are saved back to your local host folder.
@@ -53,7 +53,7 @@ Workshop description.
      docker compose run -it --rm --entrypoint /bin/sh -v ./app:/var/task lambda
      ```
 
-     > This command opens an interactive session with the container.  
+     > This command opens an interactive session with the container.
 
    - Run the following command
 
@@ -67,15 +67,14 @@ Workshop description.
 
 ## 2. Dependency management and TypeScript config
 
-1. **Initialise project and install dev dependencies** 
+1. **Initialise project and install dev dependencies**
    - Run the following command
 
-    ```shell
-     npm init -y
-     ```
+   ```shell
+    npm init -y
+   ```
 
-     > Notice how the `lambda` directory is automatically created on your host machine due to the volume mount.
-
+   > Notice how the `lambda` directory is automatically created on your host machine due to the volume mount.
    - Run the following command
 
      ```shell
@@ -85,7 +84,7 @@ Workshop description.
      > Notice this automatically creates a `package-lock.json` file.
      > Even though dependencies have been installed, if you run `docker images` again, you'll see the image size hasn't changed because the `node_modules` were written to your local volume, not the image layer.
 
-3. **Exit the container**
+2. **Exit the container**
    - Run the following command
 
    ```shell
@@ -94,7 +93,7 @@ Workshop description.
 
    > We are now done with the interactive container at this stage and no longer need it.
 
-4. **Create `tsconfig.json`**  
+3. **Create `tsconfig.json`**  
    Create `tsconfig.json` and add the following content to configure the TypeScript compiler:
 
    ```json
@@ -108,13 +107,13 @@ Workshop description.
 
    > ℹ️ While you could auto-generate this file, our manual configuration using a recommended preset keeps the file minimal and clean.
 
-5. **Create source file and scripts**
+4. **Create source file and scripts**
    - Create `./src/index.ts` with the following:
 
      ```typescript
      import { Handler } from "aws-lambda";
 
-     export const handler: Handler = (event,context) => {
+     export const handler: Handler = (event, context) => {
        console.log("Hello world!");
      };
      ```
@@ -143,6 +142,7 @@ CMD [ "build/dist/index.handler" ]
 ```
 
 Run `docker compose up --build`
+
 > This Lambda starts but nothing happens
 
 Kill the container `Ctrl+C`
@@ -151,20 +151,22 @@ Add a new service to the `docker-compos.yaml` file
 
 ```yaml
 curl:
-   image: curlimages/curl
-   depends_on:
-   lambda:
-      condition: service_healthy
-   command:
-   - -s
-   - -d {}
-   - http://lambda:8080/2015-03-31/functions/function/invocations
+  image: curlimages/curl
+  depends_on:
+  lambda:
+    condition: service_healthy
+  command:
+    - -s
+    - -d {}
+    - http://lambda:8080/2015-03-31/functions/function/invocations
 ```
 
 Run `docker compose up --build`
+
 > The Lambda and cURL containers start and execute, the cURL container responded with an exite code of 0 but is still hanging
 
 Kill the container `Ctrl+C`
 
 Run `docker compose up --build --abort-on-container-exit`
+
 > The Lambda and cURL containers start and execute, the cURL container responded with an exite code of 0 and both containers shut down
