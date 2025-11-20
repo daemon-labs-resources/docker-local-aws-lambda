@@ -18,7 +18,8 @@ mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
 
 3. **Open the new folder in your code editor**
 
-   > If you are using VSCode, we can now do everything from within the code editor.
+> [!TIP]
+> If you are using VSCode, we can now do everything from within the code editor.
 
 4. **Create `Dockerfile`**  
    Add the following content:
