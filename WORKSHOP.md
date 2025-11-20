@@ -6,127 +6,146 @@ Workshop description.
 
 ## 1. Project setup and basic build
 
-1. **Create project folder**  
+### Create project folder
+
 Create a new folder for your project in a sensible location, for example:
 
 ```shell
 mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > You can either create this via a terminal window or your file explorer.
 
-2. **Open the new folder in your code editor**
+### Open the new folder in your code editor
 
 > [!TIP]
 > If you are using VSCode, we can now do everything from within the code editor.
 
-4. **Create `Dockerfile`**  
-   Add the following content:
+### Create `Dockerfile`
 
-   ```Dockerfile
-   FROM public.ecr.aws/lambda/nodejs:22
-   ```
+Add the following content:
 
-5. **Create `docker-compose.yaml`**  
-   Add the following content to define your service:
+```Dockerfile
+FROM public.ecr.aws/lambda/nodejs:22
+```
 
-   ```yaml
-   ---
-   services:
-     lambda:
-       build: .
-   ```
+### Create `docker-compose.yaml`
 
-   > You'll also notice that we're mounting a volume, this is to ensure any generated files are saved back to your local host folder.
+Add the following content to define your service:
 
-6. **Initial image check**
-   - Run the following command
+```yaml
+---
+services:
+  lambda:
+    build: .
+```
 
-     ```shell
-     docker compose build
-     ```
+> [!NOTE]
+> You'll also notice that we're mounting a volume, this is to ensure any generated files are saved back to your local host folder.
 
-     > If you now run `docker images`, you'll see a newly created image which should be around 226MB in size.
+### Initial image check
 
-   - Run the following command
+Run the following command:
 
-     ```shell
-     docker compose run -it --rm --entrypoint /bin/sh -v ./app:/var/task lambda
-     ```
+```shell
+docker compose build
+```
 
-     > This command opens an interactive session with the container.
+> [!NOTE]
+> If you now run `docker images`, you'll see a newly created image which should be around 226MB in size.
 
-   - Run the following command
+Run the following command:
 
-     ```shell
-     node --version
-     ```
+```shell
+docker compose run -it --rm --entrypoint /bin/sh -v ./app:/var/task lambda
+```
 
-     > The output should start with `v22` followed by the latest minor and patch version.
+> [!NOTE]
+> This command opens an interactive session with the container.
+
+Run the following command:
+
+```shell
+node --version
+```
+
+> [!NOTE]
+> The output should start with `v22` followed by the latest minor and patch version.
 
 ---
 
 ## 2. Dependency management and TypeScript config
 
-1. **Initialise project and install dev dependencies**
-   - Run the following command
+### Initialise project and install dev dependencies
 
-   ```shell
-    npm init -y
-   ```
+Run the following command:
 
-   > Notice how the `lambda` directory is automatically created on your host machine due to the volume mount.
-   - Run the following command
+```shell
+npm init -y
+```
 
-     ```shell
-     npm add --save-dev @types/node@22 @types/aws-lambda @tsconfig/recommended typescript
-     ```
+> [!NOTE]
+> Notice how the `lambda` directory is automatically created on your host machine due to the volume mount.
 
-     > Notice this automatically creates a `package-lock.json` file.
-     > Even though dependencies have been installed, if you run `docker images` again, you'll see the image size hasn't changed because the `node_modules` were written to your local volume, not the image layer.
+Run the following command:
 
-2. **Exit the container**
-   - Run the following command
+```shell
+npm add --save-dev @types/node@22 @types/aws-lambda @tsconfig/recommended typescript
+```
 
-   ```shell
-   exit
-   ```
+> [!NOTE]
+> Notice this automatically creates a `package-lock.json` file.
+> Even though dependencies have been installed, if you run `docker images` again, you'll see the image size hasn't changed because the `node_modules` were written to your local volume, not the image layer.
 
-   > We are now done with the interactive container at this stage and no longer need it.
+### Exit the container
 
-3. **Create `tsconfig.json`**  
-   Create `tsconfig.json` and add the following content to configure the TypeScript compiler:
+Run the following command:
 
-   ```json
-   {
-     "extends": "@tsconfig/recommended/tsconfig.json",
-     "compilerOptions": {
-       "outDir": "./build/dist"
-     }
-   }
-   ```
+```shell
+exit
+```
 
-   > ℹ️ While you could auto-generate this file, our manual configuration using a recommended preset keeps the file minimal and clean.
+> [!NOTE]
+> We are now done with the interactive container at this stage and no longer need it.
 
-4. **Create source file and scripts**
-   - Create `./src/index.ts` with the following:
+### Create `tsconfig.json`
 
-     ```typescript
-     import { Handler } from "aws-lambda";
+Create `tsconfig.json` and add the following content to configure the TypeScript compiler:
 
-     export const handler: Handler = (event, context) => {
-       console.log("Hello world!");
-     };
-     ```
+```json
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./build/dist"
+  }
+}
+```
 
-   - Add the following to the `scripts` section in your `package.json`:
+> [!NOTE]
+> While you could auto-generate this file, our manual configuration using a recommended preset keeps the file minimal and clean.
 
-     ```json
-     "build": "npm run build:tsc && npm run build:dependencies",
-     "build:tsc": "rm -rf ./build/dist && tsc",
-     "build:dependencies": "rm -rf ./build/dependencies && mkdir -p ./build/dependencies/nodejs && cp ./package*.json ./build/dependencies/nodejs && npm ci --omit dev --prefix ./build/dependencies/nodejs",
-     ```
+### Create source file and scripts
+
+Create `./src/index.ts` with the following:
+
+```typescript
+import { Handler } from "aws-lambda";
+
+export const handler: Handler = (event, context) => {
+  console.log("Hello world!");
+};
+```
+
+Add the following to the `scripts` section in your `package.json`:
+
+```json
+"build": "npm run build:tsc && npm run build:dependencies",
+"build:tsc": "rm -rf ./build/dist && tsc",
+"build:dependencies": "rm -rf ./build/dependencies && mkdir -p ./build/dependencies/nodejs && cp ./package*.json ./build/dependencies/nodejs && npm ci --omit dev --prefix ./build/dependencies/nodejs",
+```
+
+---
 
 Update the `Dockerfile`
 
