@@ -7,11 +7,11 @@ Workshop description.
 ## 1. Project setup and basic build
 
 1. **Create project folder**
-   Create a new folder for your project in a sensible location, for example:
+Create a new folder for your project in a sensible location, for example:
 
-   ```shell
-   mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
-   ```
+```shell
+mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
+```
 
 > [!NOTE]  
 > You can either create this via a terminal window or your file explorer.
