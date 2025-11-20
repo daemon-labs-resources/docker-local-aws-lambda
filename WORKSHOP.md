@@ -13,20 +13,21 @@ Workshop description.
    mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
    ```
 
+   > [!NOTE]
    > You can either create this via a terminal window or your file explorer.
 
-2. **Open the new folder in your code editor**
+3. **Open the new folder in your code editor**
 
    > If you are using VSCode, we can now do everything from within the code editor.
 
-3. **Create `Dockerfile`**  
+4. **Create `Dockerfile`**  
    Add the following content:
 
    ```Dockerfile
    FROM public.ecr.aws/lambda/nodejs:22
    ```
 
-4. **Create `docker-compose.yaml`**  
+5. **Create `docker-compose.yaml`**  
    Add the following content to define your service:
 
    ```yaml
@@ -38,7 +39,7 @@ Workshop description.
 
    > You'll also notice that we're mounting a volume, this is to ensure any generated files are saved back to your local host folder.
 
-5. **Initial image check**
+6. **Initial image check**
    - Run the following command
 
      ```shell
