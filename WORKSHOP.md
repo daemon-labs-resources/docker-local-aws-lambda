@@ -13,7 +13,7 @@ Workshop description.
    mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
    ```
 
-   > [!NOTE]
+   > [!NOTE]  
    > You can either create this via a terminal window or your file explorer.
 
 3. **Open the new folder in your code editor**
