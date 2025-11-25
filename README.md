@@ -142,10 +142,9 @@ Create `./nodejs/src/index.ts` with the following:
 import { Handler } from "aws-lambda";
 
 export const handler: Handler = (event, context) => {
-    console.log("Hello world!");
-    console.log({ event, context });
+  console.log("Hello world!");
+  console.log({ event, context });
 };
-
 ```
 
 Add the following to the `scripts` section in your `package.json`:
@@ -242,7 +241,7 @@ Update the command for the cURL container:
 ```yaml
 command:
   - -s
-  - -d 
+  - -d
   - ${LAMBDA_INPUT:-{}}
   - http://lambda:8080/2015-03-31/functions/function/invocations
 ```
