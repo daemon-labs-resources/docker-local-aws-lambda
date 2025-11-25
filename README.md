@@ -14,7 +14,7 @@ Before beginning this workshop, please ensure your environment is correctly set 
 
 #### Load Docker images
 
-> [!WARNING]
+> [!CAUTION]
 > This only works when attending a workshop in person.  
 > Due to having a number of people trying to retrieve Docker images at the same time, this allows for a more efficient way.
 
