@@ -6,6 +6,8 @@
 
 ## 🛑 Prerequisites
 
+### General/global prerequisites
+
 Before beginning this workshop, please ensure your environment is correctly set up by following the instructions in our prerequisites documentation:
 
 ➡️ **[Prerequisites guide](https://github.com/daemon-labs-resources/prerequisites)**
@@ -241,7 +243,7 @@ services:
     build: ./nodejs
 ```
 
-### Run the stack
+### Run the stack
 
 ```shell
 docker compose up --build --abort-on-container-exit
@@ -253,7 +255,7 @@ docker compose up --build --abort-on-container-exit
 
 **Goal:** Simulate real-world events and environments.
 
-### Add environment variables
+### Add environment variables
 
 Update `./nodejs/Dockerfile`:
 
