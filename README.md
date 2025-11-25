@@ -246,3 +246,54 @@ services:
 ```shell
 docker compose up --build --abort-on-container-exit
 ```
+
+---
+
+## 4: Developer experience
+
+**Goal:** Simulate real-world events and environments.
+
+### Add environment variables
+
+Update `./nodejs/Dockerfile`:
+
+```Dockerfile
+ENV AWS_LAMBDA_FUNCTION_MEMORY_SIZE=128
+ENV AWS_LAMBDA_FUNCTION_TIMEOUT=3
+ENV AWS_LAMBDA_LOG_FORMAT=JSON
+```
+
+### Create an event file
+
+Create `./events/test.json` in the root (keep events outside the code folder):
+
+```json
+{
+  "user": "Alice",
+  "action": "login"
+}
+```
+
+### Inject the event
+
+Update `docker-compose.yaml`:
+
+```yaml
+curl:
+    # ... existing config
+  command:
+    - -s
+    - -d 
+    - ${LAMBDA_INPUT:-{}}
+    - http://lambda:8080/2015-03-31/functions/function/invocations
+  volumes:
+    - ./events:/events:ro
+```
+
+### Test with data
+
+```shell
+LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-container-exit
+```
+
+---
