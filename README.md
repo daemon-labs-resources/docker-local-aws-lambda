@@ -158,7 +158,7 @@ Create `./nodejs/tsconfig.json` locally:
 
 ### Create the handler
 
-Create `nodejs/src/index.ts`:
+Create `./nodejs/src/index.ts`:
 
 ```typescript
 import { Handler } from "aws-lambda";
