@@ -25,7 +25,7 @@ Once the facilitator has given you an IP address, open `http://<IP-ADDRESS>:8000
 When you see the file listing, download the `workshop-images.tar` file.
 
 > [!WARNING]
-> Your browser may block the download initially, allow it to download.
+> Your browser may block the download initially, when prompted, allow it to download.
 
 Run the following command:
 
