@@ -183,3 +183,66 @@ Update `./nodejs/package.json` scripts:
   "build": "tsc"
 },
 ```
+
+---
+
+## 3. The runtime
+
+**Goal:** Make the container act like a real Lambda server.
+
+### Add `.dockerignore`
+
+Create `./nodejs/.dockerignore` (inside the subdirectory).  
+This is critical because our build context is now that specific folder.
+
+```plaintext
+build
+node_modules
+```
+
+### Update `Dockerfile`
+
+Update `./nodejs/Dockerfile`.  
+Notice that the `COPY` paths are cleaner now because they are relative to the `nodejs` folder.
+
+```Dockerfile
+FROM public.ecr.aws/lambda/nodejs:24
+
+HEALTHCHECK --interval=1s --timeout=1s --retries=30 \
+    CMD [ "curl", "-I", "http://localhost:8080" ]
+
+COPY ./package*.json ./
+
+RUN npm ci
+
+COPY ./ ./
+
+RUN npm run build
+
+CMD [ "build/index.handler" ]
+```
+
+### Add cURL service
+
+Update `docker-compose.yaml` (in the root) to include a service that triggers our Lambda.
+
+```yaml
+services:
+  curl:
+    image: curlimages/curl
+    depends_on:
+      lambda:
+        condition: service_healthy
+    command:
+      - -s
+      - -d {}
+      - http://lambda:8080/2015-03-31/functions/function/invocations
+  lambda:
+    build: ./nodejs
+```
+
+### Run the stack
+
+```shell
+docker compose up --build --abort-on-container-exit
+```
