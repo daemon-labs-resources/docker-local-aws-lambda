@@ -1,6 +1,7 @@
 # Learn to build and develop AWS Lambda functions locally with Docker
 
-@todo Workshop description.
+This guide walks you through setting up a robust local Serverless development environment using **Docker**, **AWS Lambda**, **TypeScript**, and **LocalStack**.  
+It focuses on emulating the cloud runtime entirely offline, optimising production images with multi-stage builds, and mocking external services like S3 to create a complete, cost-free development workflow.
 
 ---
 
