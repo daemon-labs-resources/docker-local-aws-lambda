@@ -10,14 +10,51 @@ Before beginning this workshop, please ensure your environment is correctly set 
 
 ➡️ **[Prerequisites guide](https://github.com/daemon-labs-resources/prerequisites)**
 
+### Retrieve Docker images
+
+#### Load Docker images
+
+> [!WARNING]
+> This only works when attending a workshop in person.  
+> Due to having a number of people trying to retrieve Docker images at the same time, this allows for a more efficient way.
+
+Once the facilitator has given you an IP address, open `http://<IP-ADDRESS>:8000` in your browser.
+
+When you see the file listing, download the `workshop-images.tar` file.
+
+> [!WARNING]
+> Your browser may block the download initially, allow it to download.
+
 Run the following command:
 
 ```shell
-docker pull ...
+docker load -i ~/Downloads/workshop-images.tar
 ```
 
-> [!TIP]
-> Pulling the Docker images isn't a requirement, but it helps to have it pre-downloaded so we don't wait for everyone to do it at the same time.
+#### Pull Docker images
+
+> [!CAUTION]
+> Only use this approach if you are running through this workshop on your own.
+
+Run the following command:
+
+```shell
+docker pull public.ecr.aws/lambda/nodejs:24
+docker pull public.ecr.aws/lambda/python:3.14
+docker pull curlimages/curl
+docker pull localstack/localstack
+```
+
+### Validate Docker images
+
+Run the following command:
+
+```shell
+docker images
+```
+
+> [!NOTE]
+> You should now see four images listed.
 
 ---
 
@@ -44,7 +81,7 @@ mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
 Add the following content:
 
 ```Dockerfile
-FROM public.ecr.aws/lambda/nodejs:22
+FROM public.ecr.aws/lambda/nodejs:24
 ```
 
 ### Create `docker-compose.yaml`
@@ -158,7 +195,7 @@ Add the following to the `scripts` section in your `package.json`:
 Update the `Dockerfile`
 
 ```Dockerfile
-FROM public.ecr.aws/lambda/nodejs:22
+FROM public.ecr.aws/lambda/nodejs:24
 
 HEALTHCHECK --interval=1s --timeout=1s --retries=30 \
     CMD [ "curl", "-I", "http://localhost:8080" ]
@@ -264,7 +301,7 @@ Run `LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-contai
 ### Update the `Dockerfile` for optimised caching
 
 ```Dockerfile
-FROM public.ecr.aws/lambda/nodejs:22
+FROM public.ecr.aws/lambda/nodejs:24
 
 ENV AWS_LAMBDA_FUNCTION_MEMORY_SIZE=128
 ENV AWS_LAMBDA_FUNCTION_TIMEOUT=3
@@ -287,7 +324,7 @@ CMD [ "build/index.handler" ]
 ### Update the `Dockerfile` for multi-stage builds
 
 ```Dockerfile
-FROM public.ecr.aws/lambda/nodejs:22 AS base
+FROM public.ecr.aws/lambda/nodejs:24 AS base
 
 ENV AWS_LAMBDA_FUNCTION_MEMORY_SIZE=128
 ENV AWS_LAMBDA_FUNCTION_TIMEOUT=3
