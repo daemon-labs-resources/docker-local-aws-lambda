@@ -376,11 +376,11 @@ services:
 
 ```yaml
 localstack:
-    image: localstack/localstack
-    ports:
-      - 4566:4566
-    environment:
-      - SERVICES=s3
+  image: localstack/localstack
+  ports:
+    - 4566:4566
+  environment:
+    - SERVICES=s3
 ```
 
 ### Update Lambda config
@@ -399,7 +399,7 @@ environment:
 
 ### Update code
 
-Run `npm install @aws-sdk/client-s3` inside `./nodejs`. 
+Run `npm install @aws-sdk/client-s3` inside `./nodejs`.  
 Update `./nodejs/src/index.ts` with the S3 client logic.
 
 ### Final run
