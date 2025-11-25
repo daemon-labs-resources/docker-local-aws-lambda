@@ -81,7 +81,7 @@ mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
 
 > [!TIP]
 > If you are using VSCode, we can now do everything from within the code editor.  
-> You can open the terminal window via Terminal -> New Terminal.
+> You can open the terminal pane via Terminal -> New Terminal.
 
 ### Create the code subdirectory
 
@@ -93,7 +93,7 @@ mkdir nodejs
 
 ### Create the `Dockerfile`
 
-Create the file at `nodejs/Dockerfile` (inside the subdirectory).
+Create the file at `./nodejs/Dockerfile` (inside the subdirectory).
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:24
@@ -118,3 +118,68 @@ docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 ```
 
 ---
+
+## 2. The application
+
+**Goal:** Initialise a TypeScript Node.js project.
+
+### Initialise the project
+
+Inside the container shell:
+
+```shell
+npm init -y
+```
+
+### Install dependencies
+
+```shell
+npm add --save-dev @types/node@24 @types/aws-lambda @tsconfig/recommended typescript
+```
+
+### Exit the container
+
+```shell
+exit
+```
+
+### Configure TypeScript
+
+Create `./nodejs/tsconfig.json` locally:
+
+```json
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./build"
+  }
+}
+```
+
+### Create the handler
+
+Create `nodejs/src/index.ts`:
+
+```typescript
+import { Handler } from "aws-lambda";
+
+export const handler: Handler = (event, context) => {
+  console.log("Hello world!");
+  console.log({ event, context });
+
+  return {
+    statusCode: 200,
+    body: "Hello World!"
+  };
+};
+```
+
+### Add build script
+
+Update `./nodejs/package.json` scripts:
+
+```json
+"scripts": {
+  "build": "tsc"
+},
+```
