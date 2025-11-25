@@ -17,6 +17,8 @@ Before beginning this workshop, please ensure your environment is correctly set 
 > [!CAUTION]
 > This only works when attending a workshop in person.  
 > Due to having a number of people trying to retrieve Docker images at the same time, this allows for a more efficient way.
+> 
+> If you are **NOT** in an in-person workshop, see [pull docker images](#pull-docker-images).
 
 Once the facilitator has given you an IP address, open `http://<IP-ADDRESS>:8000` in your browser.
 
@@ -35,6 +37,8 @@ docker load -i ~/Downloads/workshop-images.tar
 
 > [!CAUTION]
 > Only use this approach if you are running through this workshop on your own.
+>
+> If you are in an in-person workshop, see [load docker images](#load-docker-images).
 
 Run the following command:
 
