@@ -367,3 +367,51 @@ services:
 ```
 
 ---
+
+## 6: Advanced integration
+
+**Goal:** Connect to LocalStack.
+
+### Add LocalStack Service to `./docker-compose.yaml`
+
+```yaml
+localstack:
+    image: localstack/localstack
+    ports:
+      - 4566:4566
+    environment:
+      - SERVICES=s3
+```
+
+### Update Lambda config
+
+Update `docker-compose.yaml`:
+
+```yaml
+depends_on:
+  - localstack
+environment:
+  - AWS_ENDPOINT_URL=http://localstack:4566
+  - AWS_ACCESS_KEY_ID=test
+  - AWS_SECRET_ACCESS_KEY=test
+  - AWS_REGION=us-east-1
+```
+
+### Update code
+
+Run `npm install @aws-sdk/client-s3` inside `./nodejs`. 
+Update `./nodejs/src/index.ts` with the S3 client logic.
+
+### Final run
+
+Run the following command:
+
+```shell
+docker compose up --build --abort-on-container-exit
+```
+
+---
+
+## 🎉 Congratulations
+
+You have built a clean, modular, serverless development environment.
