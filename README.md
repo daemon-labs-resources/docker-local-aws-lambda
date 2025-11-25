@@ -17,7 +17,7 @@ Before beginning this workshop, please ensure your environment is correctly set 
 > [!CAUTION]
 > This only works when attending a workshop in person.  
 > Due to having a number of people trying to retrieve Docker images at the same time, this allows for a more efficient way.
-> 
+>
 > If you are **NOT** in an in-person workshop, see [pull docker images](#pull-docker-images).
 
 Once the facilitator has given you an IP address, open `http://<IP-ADDRESS>:8000` in your browser.
@@ -169,7 +169,7 @@ export const handler: Handler = (event, context) => {
 
   return {
     statusCode: 200,
-    body: "Hello World!"
+    body: "Hello World!",
   };
 };
 ```
