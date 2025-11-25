@@ -261,7 +261,7 @@ Run `LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-contai
 > [!TIP]
 > The `@` tells the cURL command that it should include the contents of a file rather than passing as a string.
 
-### Update the `Dockerfile`
+### Update the `Dockerfile` for optimised caching
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:22
@@ -284,7 +284,7 @@ RUN npm run build
 CMD [ "build/index.handler" ]
 ```
 
-### Update the `Dockerfile`
+### Update the `Dockerfile` for multi-stage builds
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:22 AS base
