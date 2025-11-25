@@ -213,11 +213,11 @@ FROM public.ecr.aws/lambda/nodejs:24
 HEALTHCHECK --interval=1s --timeout=1s --retries=30 \
     CMD [ "curl", "-I", "http://localhost:8080" ]
 
-COPY ./package*.json ./
+COPY ./package*.json ${LAMBDA_TASK_ROOT}
 
 RUN npm ci
 
-COPY ./ ./
+COPY ./ ${LAMBDA_TASK_ROOT}
 
 RUN npm run build
 
@@ -296,6 +296,74 @@ curl:
 
 ```shell
 LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-container-exit
+```
+
+---
+
+## 5. Optimisation & versatility
+
+**Goal:** Prepare for production and demonstrate language flexibility.
+
+### Multi-stage build
+
+Replace `./nodejs/Dockerfile` with this optimised version:
+
+```Dockerfile
+FROM FROM public.ecr.aws/lambda/nodejs:24 AS base
+
+FROM base AS builder
+
+COPY ./package*.json ${LAMBDA_TASK_ROOT}
+
+RUN npm ci
+
+COPY ./ ${LAMBDA_TASK_ROOT}
+
+RUN npm run build
+
+FROM base
+
+ENV AWS_LAMBDA_FUNCTION_MEMORY_SIZE=128
+ENV AWS_LAMBDA_FUNCTION_TIMEOUT=3
+ENV AWS_LAMBDA_LOG_FORMAT=JSON
+
+HEALTHCHECK --interval=1s --timeout=1s --retries=30 \
+    CMD [ "curl", "-I", "http://localhost:8080" ]
+
+COPY --from=builder ${LAMBDA_TASK_ROOT}/package*.json ${LAMBDA_TASK_ROOT}
+
+RUN npm ci --only=production
+
+COPY --from=builder ${LAMBDA_TASK_ROOT}/build ${LAMBDA_TASK_ROOT}/build
+
+CMD [ "build/index.handler" ]
+```
+
+### Bonus: Python swap
+
+Create `./python/app.py`:
+
+```python
+def handler(event, context):
+    return "Hello World!"
+```
+
+Create `./python/Dockerfile`:
+
+```Dockerfile
+FROM public.ecr.aws/lambda/python:3.14
+
+COPY ./ ${LAMBDA_TASK_ROOT}
+
+CMD [ "app.handler" ]
+```
+
+Update `docker-compose.yaml` to swap the build context:
+
+```yaml
+services:
+  lambda:
+    build: ./python
 ```
 
 ---
