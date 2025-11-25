@@ -280,10 +280,10 @@ Update `docker-compose.yaml`:
 
 ```yaml
 curl:
-    # ... existing config
+  # ... existing config
   command:
     - -s
-    - -d 
+    - -d
     - ${LAMBDA_INPUT:-{}}
     - http://lambda:8080/2015-03-31/functions/function/invocations
   volumes:
