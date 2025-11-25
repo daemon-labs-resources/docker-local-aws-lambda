@@ -309,7 +309,7 @@ LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-container-e
 Replace `./nodejs/Dockerfile` with this optimised version:
 
 ```Dockerfile
-FROM FROM public.ecr.aws/lambda/nodejs:24 AS base
+FROM public.ecr.aws/lambda/nodejs:24 AS base
 
 FROM base AS builder
 
@@ -399,8 +399,44 @@ environment:
 
 ### Update code
 
-Run `npm install @aws-sdk/client-s3` inside `./nodejs`.  
-Update `./nodejs/src/index.ts` with the S3 client logic.
+First, install the SDK inside `./nodejs` (or on your host machine if you have Node installed):
+
+```shell
+npm install @aws-sdk/client-s3
+```
+
+Next, update `./nodejs/src/index.ts` with the S3 client logic:
+
+```typescript
+import { Handler } from "aws-lambda";
+import { S3Client, ListBucketsCommand } from "@aws-sdk/client-s3";
+
+const client = new S3Client({
+  endpoint: process.env.AWS_ENDPOINT_URL, // Points to LocalStack
+  forcePathStyle: true,                   // Required for local mocking
+  region: process.env.AWS_REGION
+});
+
+export const handler: Handler = async (event, context) => {
+  try {
+    const command = new ListBucketsCommand({});
+    const response = await client.send(command);
+
+    console.log("S3 Buckets:", response.Buckets);
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(response.Buckets || []),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+        statusCode: 500,
+        body: "Error connecting to S3"
+    }
+  }
+};
+```
 
 ### Final run
 
