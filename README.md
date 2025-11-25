@@ -413,8 +413,8 @@ import { S3Client, ListBucketsCommand } from "@aws-sdk/client-s3";
 
 const client = new S3Client({
   endpoint: process.env.AWS_ENDPOINT_URL, // Points to LocalStack
-  forcePathStyle: true,                   // Required for local mocking
-  region: process.env.AWS_REGION
+  forcePathStyle: true, // Required for local mocking
+  region: process.env.AWS_REGION,
 });
 
 export const handler: Handler = async (event, context) => {
@@ -431,9 +431,9 @@ export const handler: Handler = async (event, context) => {
   } catch (error) {
     console.error(error);
     return {
-        statusCode: 500,
-        body: "Error connecting to S3"
-    }
+      statusCode: 500,
+      body: "Error connecting to S3",
+    };
   }
 };
 ```
