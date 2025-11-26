@@ -130,7 +130,7 @@ node --version
 ```
 
 > [!NOTE]
-> The output should start with v24 followed by the latest minor and patch version.
+> The output should start with `v24` followed by the latest minor and patch version.
 
 ---
 
@@ -146,17 +146,26 @@ Inside the container shell:
 npm init -y
 ```
 
+> [!NOTE]
+> Notice how the `nodejs/package.json` file is automatically created on your host machine due to the volume mount.
+
 ### Install dependencies
 
 ```shell
 npm add --save-dev @types/node@24 @types/aws-lambda @tsconfig/recommended typescript
 ```
 
+> [!NOTE]
+> Notice this automatically creates a `nodejs/package-lock.json` file as well as the `nodejs/node_modules` directory.
+
 ### Exit the container
 
 ```shell
 exit
 ```
+
+> [!NOTE]
+> At this stage, we no longer need the interactive shell and can return to the code editor.
 
 ### Configure TypeScript
 
@@ -170,6 +179,9 @@ Create `nodejs/tsconfig.json` locally:
   }
 }
 ```
+
+> [!NOTE]
+> While you could auto-generate this file, our manual configuration using a recommended preset keeps the file minimal and clean.
 
 ### Create the handler
 
