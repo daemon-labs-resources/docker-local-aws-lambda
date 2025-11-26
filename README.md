@@ -121,6 +121,9 @@ Run the following command:
 node --version
 ```
 
+> [!NOTE]
+> The output should start with v24 followed by the latest minor and patch version.
+
 ---
 
 ## 2. The application
