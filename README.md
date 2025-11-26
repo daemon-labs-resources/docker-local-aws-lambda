@@ -617,20 +617,22 @@ docker compose up --abort-on-container-exit --build
 
 **Goal:** Connect to LocalStack.
 
-### Add LocalStack Service to `docker-compose.yaml`
+### Add LocalStack service to `docker-compose.yaml`
 
 ```yaml
-localstack:
-  image: localstack/localstack
-  healthcheck:
-    test:
-      - CMD
-      - curl
-      - -f
-      - http://localhost:4566/_localstack/health
-    interval: 1s
-    timeout: 1s
-    retries: 30
+services:
+  # ... existing config
+  localstack:
+    image: localstack/localstack
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -I
+        - http://localhost:4566/_localstack/health
+      interval: 1s
+      timeout: 1s
+      retries: 30
 ```
 
 ### Update Lambda config
@@ -638,18 +640,26 @@ localstack:
 Update `docker-compose.yaml`:
 
 ```yaml
-depends_on:
-  localstack:
-    condition: service_healthy
-environment:
-  AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
-  AWS_LAMBDA_FUNCTION_TIMEOUT: 3
-  AWS_LAMBDA_LOG_FORMAT: JSON
-  AWS_ENDPOINT_URL: http://localstack:4566
-  AWS_SECRET_ACCESS_KEY: test
-  AWS_ACCESS_KEY_ID: test
-  AWS_REGION: us-east-1
+services:
+  # ... existing config
+  lambda:
+    # ... existing config
+    depends_on:
+      localstack:
+        condition: service_healthy
+    environment:
+      AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
+      AWS_LAMBDA_FUNCTION_TIMEOUT: 3
+      AWS_LAMBDA_LOG_FORMAT: JSON
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ACCESS_KEY_ID: test
+      AWS_REGION: us-east-1
+  # ... existing config
 ```
+
+> [!WARNING]
+> Even though we aren't connecting to a real AWS account, the environment variables are still needed.
 
 ### Update code
 
@@ -658,6 +668,9 @@ Run this command to start an interactive shell:
 ```shell
 docker compose run -it --rm --no-deps --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 ```
+
+> [!TIP]
+> The `--no-deps` makes sure we are only running the `lambda` container and ignoring any others.
 
 Install the SDK:
 
@@ -714,6 +727,10 @@ Run the following command:
 ```shell
 docker compose up --abort-on-container-exit --build
 ```
+
+> [!NOTE]
+> During this build you'll notice both the `npm ci` and `npm run build` layers are rebuilt.  
+> Also, as we haven't actually created any buckets, receiving an empty array is the correct response.
 
 ---
 
