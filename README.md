@@ -542,7 +542,8 @@ docker compose down --rmi all
 ```
 
 > [!WARNING]
-> If you followed the prerequisites to run `docker load` this command will not actually remove all images, the `lambda/node` and `lambda/python` images still exist.  
+> If you followed the prerequisites to run `docker load` this command will not actually remove all images, the `lambda/node` and `lambda/python` images still exist.
+>
 > To remove these you'll need to run the following:
 > ```shell
 > docker rmi public.ecr.aws/lambda/nodejs:24
