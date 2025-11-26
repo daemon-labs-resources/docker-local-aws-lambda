@@ -44,6 +44,17 @@ docker images
 
 > [!NOTE]
 > You should now see four images listed.
+>
+> ```shell
+> $ docker images
+> REPOSITORY                     TAG       IMAGE ID       CREATED        SIZE
+> localstack/localstack          latest    de4d3256398a   25 hours ago   1.17GB
+> public.ecr.aws/lambda/python   3.14      983ca119258a   3 days ago     584MB
+> public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago     449MB
+> curlimages/curl                latest    26c487d15124   2 weeks ago    24.5MB
+> ```
+>
+> _Image IDs, created and sizes may vary._
 
 ---
 
@@ -94,6 +105,17 @@ services:
     build: ./nodejs
 ```
 
+### Run the initial build
+
+Run the following command:
+
+```shell
+docker compose build
+```
+
+> [!NOTE]
+> At this stage, if you loaded the Docker images as part of the prerequisites, if you run `docker images` you should see the `lambda/nodejs` image as well as a new image which is the same size.
+
 ### Initialise the container
 
 Run this command to start an interactive shell:
@@ -102,6 +124,16 @@ Run this command to start an interactive shell:
 docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 ```
 
+> [!WARNING]
+> Due to AWS not creating multi-platform images we need to start an interactive shell rather than passing in commands.  
+> For example, if we were to run the following command:
+>
+> ```shell
+> docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda node --version
+> ```
+>
+> In some cases, we would receive the error `/var/lang/bin/node: /var/lang/bin/node: cannot execute binary file`.
+
 ### Image check
 
 Run the following command:
@@ -109,6 +141,9 @@ Run the following command:
 ```shell
 node --version
 ```
+
+> [!NOTE]
+> The output should start with `v24` followed by the latest minor and patch version.
 
 ---
 
@@ -124,17 +159,27 @@ Inside the container shell:
 npm init -y
 ```
 
+> [!NOTE]
+> Notice how the `nodejs/package.json` file is automatically created on your host machine due to the volume mount.
+
 ### Install dependencies
 
 ```shell
 npm add --save-dev @types/node@24 @types/aws-lambda @tsconfig/recommended typescript
 ```
 
+> [!NOTE]
+> Notice this automatically creates a `nodejs/package-lock.json` file as well as the `nodejs/node_modules` directory.
+
 ### Exit the container
 
 ```shell
 exit
 ```
+
+> [!NOTE]
+> At this stage, we no longer need the interactive shell and can return to the code editor.
+> Even though dependencies have been installed, if you run `docker images` again, you'll see the image size hasn't changed because the `node_modules` were written to your local volume, not via an image layer.
 
 ### Configure TypeScript
 
@@ -149,6 +194,9 @@ Create `nodejs/tsconfig.json` locally:
 }
 ```
 
+> [!NOTE]
+> While you could auto-generate this file, our manual configuration using a recommended preset keeps the file minimal and clean.
+
 ### Create the handler
 
 Create `nodejs/src/index.ts`:
@@ -157,12 +205,11 @@ Create `nodejs/src/index.ts`:
 import { Handler } from "aws-lambda";
 
 export const handler: Handler = async (event, context) => {
-  console.log("Hello world!");
   console.log({ event, context });
 
   return {
     statusCode: 200,
-    body: "Hello World!",
+    body: { event, context },
   };
 };
 ```
@@ -175,6 +222,9 @@ Update `nodejs/package.json` scripts:
 "build": "tsc"
 ```
 
+> [!NOTE]
+> At this stage we have the main building blocks for the application, but our runtime doesn't know what to do with them.
+
 ---
 
 ## 3. The runtime
@@ -183,13 +233,16 @@ Update `nodejs/package.json` scripts:
 
 ### Add `.dockerignore`
 
-Create `nodejs/.dockerignore` (inside the subdirectory).  
-This is critical because our build context is now that specific folder.
+Create `nodejs/.dockerignore` (inside the subdirectory):
 
 ```plaintext
 build
 node_modules
 ```
+
+> [!NOTE]
+> We're making sure that no matter where we're building the image it never loads in any built files or local `node_modules`.  
+> That way, whenever we're building it is done in an identical way and reduces the possibility of "it worked on my machine".
 
 ### Update `Dockerfile`
 
@@ -198,16 +251,43 @@ Update `nodejs/Dockerfile`:
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:24
 
-COPY ./package*.json ${LAMBDA_TASK_ROOT}
-
-RUN npm ci
-
 COPY ./ ${LAMBDA_TASK_ROOT}
 
-RUN npm run build
+RUN npm ci && npm run build
 
 CMD [ "build/index.handler" ]
 ```
+
+> [!NOTE]
+> As we're now doing the dependency install as part of the build, when you run `docker images` you'll notice our Docker image has increased in size.
+>
+> ```shell
+> $ docker images
+> REPOSITORY                     TAG       IMAGE ID       CREATED         SIZE
+> your-lambda                    latest    05b92630088f   3 seconds ago   483MB
+> public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
+> ```
+
+<!--  -->
+
+> [!TIP]
+> When running `docker images` you'll notice that we have got a dangling image that looks a bit like this:
+>
+> ```shell
+> $ docker images
+> REPOSITORY                     TAG       IMAGE ID       CREATED         SIZE
+> your-lambda                    latest    05b92630088f   3 seconds ago   483MB
+> public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
+> <none>                         <none>    17e6c55f785f   3 days ago      449MB
+> ```
+>
+> When you rebuilt the image, Docker moved the "nametag" to your new version, leaving the old version behind as a nameless orphan.
+>
+> Any dangling images can be cleaned with the following command:
+>
+> ```shell
+> docker image prune
+> ```
 
 ### Update Lambda healthcheck
 
@@ -222,7 +302,30 @@ lambda:
       - curl
       - -I
       - http://localhost:8080
+    interval: 1s
+    timeout: 1s
+    retries: 30
 ```
+
+> [!TIP]
+> The healthcheck allows Docker (and us) to know when a container is up and running as expected.  
+> If you were to run `docker ps` in a different terminal window while our containers were starting up you might see the following:
+>
+> ```shell
+> $ docker ps
+> CONTAINER ID   IMAGE             COMMAND                  CREATED        STATUS                                     PORTS     NAMES
+> bf2696aeaabf   solution-lambda   "/lambda-entrypoint.…"   1 second ago   Up Less than a second (health: starting)             your-lambda-1
+> ```
+>
+> If you ran `docker ps` once the container was able to pass the healthcheck you would hopefully see the following:
+>
+> ```shell
+> $ docker ps
+> CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS                    PORTS     NAMES
+> bf2696aeaabf   solution-lambda   "/lambda-entrypoint.…"   36 seconds ago   Up 35 seconds (healthy)             your-lambda-1
+> ```
+>
+> _If the container wasn't able to pass the healthcheck then you would eventually see `unhealthy` instead._
 
 ### Add cURL service
 
@@ -239,15 +342,34 @@ services:
       - -s
       - -d {}
       - http://lambda:8080/2015-03-31/functions/function/invocations
-  lambda:
-    build: ./nodejs
+  # ... existing config
 ```
+
+> [!NOTE]
+> As we have the healthceck in place, we can actually tell the `curl` container not to start until it gets that healthy response.
 
 ### Run the stack
 
+Run the following command:
+
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up
 ```
+
+> [!WARNING]
+> The problem with this specific command is that the Lambda continues to run despite the cURL container running and exiting.  
+> **Exit your container by pressing Ctrl+C on your keyboard.**
+
+### Tell Docker to terminate the containers
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!TIP]
+> With this extra attribute, we've told Docker to terminate all other running containers when one exits.
 
 ---
 
@@ -270,6 +392,39 @@ services:
       AWS_LAMBDA_LOG_FORMAT: JSON
 ```
 
+### Check the updated values
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!NOTE]
+> On this execution you'll be able to confirm two of the values are working.  
+> Find the Lambda `REPORT` log and you'll now see `Memory Size` and `Max Memory Used` are set to `128 MB` instead of the previous `3008 MB`.  
+> Find the log for `event` and `context` and you'll see it has now switched to a JSON structured log rather than just broken text.
+
+### Check the timeout
+
+Update `docker-compose.yaml`:
+
+```yaml
+AWS_LAMBDA_FUNCTION_TIMEOUT: 0
+```
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!NOTE]
+> On this execution you'll see that the `curl` container received `Task timed out after 0.00 seconds`.  
+> Find the Lambda `REPORT` again and you'll see `Init Duration`, `Duration` and `Billed Duration` are all set to `0 ms`.
+>
+> **Be sure to set `AWS_LAMBDA_FUNCTION_TIMEOUT` back to `3` now.**
+
 ### Create the events subdirectory
 
 Create the events subdirectory in the root (keep events outside the code folder):
@@ -284,8 +439,7 @@ Create `events/custom.json`:
 
 ```json
 {
-  "user": "Alice",
-  "action": "login"
+  "user": "Alice"
 }
 ```
 
@@ -303,6 +457,9 @@ Create `events/api-gateway.json`:
 }
 ```
 
+> [!NOTE]
+> Lambdas can technically receive any payload, but can also be invoked from other AWS services, so it is very useful to replicate this as much as possible.
+
 ### Inject the event
 
 Update `docker-compose.yaml`:
@@ -316,30 +473,111 @@ services:
       - -d
       - ${LAMBDA_INPUT:-{}}
       - http://lambda:8080/2015-03-31/functions/function/invocations
-volumes:
-  - ./events:/events:ro
+    volumes:
+      - ./events:/events:ro
   # ... existing config
 ```
 
 ### Test with data
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit
 ```
 
 ```shell
-LAMBDA_INPUT=@/events/custom.json docker compose up --build --abort-on-container-exit
+LAMBDA_INPUT=@/events/custom.json docker compose up --abort-on-container-exit
 ```
 
 ```shell
-LAMBDA_INPUT=@/events/api-gateway.json docker compose up --build --abort-on-container-exit
+LAMBDA_INPUT=@/events/api-gateway.json docker compose up --abort-on-container-exit
 ```
+
+> [!NOTE]
+> With each of these commands, you'll notice that the `curl` container receives a slightly different response where the event changes.  
+> The first command we didn't include the `LAMBDA_INPUT` attribute, so you `docker-compose.yaml` default the input to `{}`.
+
+### Add a new log
+
+Update `nodejs/src/index.ts` to include a new log:
+
+```typescript
+import { Handler } from "aws-lambda";
+
+export const handler: Handler = async (event, context) => {
+  console.log("Hello world!");
+  console.log({ event, context });
+
+  return {
+    statusCode: 200,
+    body: { event, context },
+  };
+};
+```
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!WARNING]
+> Where's the log? Nothing has actually updated.  
+> As we're running the containers and stopping them each time, we need to let Docker know about any changes.
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit --build
+```
+
+> [!NOTE]
+> Now, each time we run the containers, Docker is re-building everything and picking up any new changes.
+
+<!--  -->
+
+> [!TIP]
+> Even though Docker is technically re-building each and every time, if there are no new changes, Docker will use cached layers resulting in faster executions.
 
 ---
 
 ## 5. Optimisation
 
-**Goal:** Prepare for production with multi-stage builds.
+**Goal:** Prepare for production with improved caching and multi-stage builds.
+
+### Improved caching
+
+Replace `nodejs/Dockerfile` with this cached optimised version:
+
+```Dockerfile
+FROM public.ecr.aws/lambda/nodejs:24
+
+COPY ./package*.json ${LAMBDA_TASK_ROOT}
+
+RUN npm ci
+
+COPY ./ ${LAMBDA_TASK_ROOT}
+
+RUN npm run build
+
+CMD [ "build/index.handler" ]
+```
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit --build
+```
+
+> [!TIP]
+> In this iteration, as `npm ci` and `npm run build` are two different layers, when one changes it doesn't impact the other.  
+> For example, if we update our code without updating any packages, the `npm ci` can still use it's cached version where as the `npm run build` will get rebuilt.
+>
+> ```plaintext
+> => CACHED [2/5] COPY ./package*.json /var/task
+> => CACHED [3/5] RUN npm ci
+> => [4/5] COPY ./ /var/task
+> => [5/5] RUN npm run build
+> ```
 
 ### Multi-stage build
 
@@ -369,13 +607,15 @@ COPY --from=builder ${LAMBDA_TASK_ROOT}/build ${LAMBDA_TASK_ROOT}/build
 CMD [ "build/index.handler" ]
 ```
 
-### Test the optimised build
-
-Run the following command to ensure everything still works:
+Run the following command:
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit --build
 ```
+
+> [!NOTE]
+> In this iteration, our built image only includes the files needed to actually be executed.  
+> This means our Docker images has a reduced size but also any potential security risk of the development dependencies are removed.
 
 ---
 
@@ -383,20 +623,22 @@ docker compose up --build --abort-on-container-exit
 
 **Goal:** Connect to LocalStack.
 
-### Add LocalStack Service to `docker-compose.yaml`
+### Add LocalStack service to `docker-compose.yaml`
 
 ```yaml
-localstack:
-  image: localstack/localstack
-  healthcheck:
-    test:
-      - CMD
-      - curl
-      - -f
-      - http://localhost:4566/_localstack/health
-    interval: 1s
-    timeout: 1s
-    retries: 30
+services:
+  # ... existing config
+  localstack:
+    image: localstack/localstack
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -I
+        - http://localhost:4566/_localstack/health
+      interval: 1s
+      timeout: 1s
+      retries: 30
 ```
 
 ### Update Lambda config
@@ -404,18 +646,26 @@ localstack:
 Update `docker-compose.yaml`:
 
 ```yaml
-depends_on:
-  localstack:
-    condition: service_healthy
-environment:
-  AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
-  AWS_LAMBDA_FUNCTION_TIMEOUT: 3
-  AWS_LAMBDA_LOG_FORMAT: JSON
-  AWS_ENDPOINT_URL: http://localstack:4566
-  AWS_SECRET_ACCESS_KEY: test
-  AWS_ACCESS_KEY_ID: test
-  AWS_REGION: us-east-1
+services:
+  # ... existing config
+  lambda:
+    # ... existing config
+    depends_on:
+      localstack:
+        condition: service_healthy
+    environment:
+      AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
+      AWS_LAMBDA_FUNCTION_TIMEOUT: 3
+      AWS_LAMBDA_LOG_FORMAT: JSON
+      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ACCESS_KEY_ID: test
+      AWS_REGION: us-east-1
+  # ... existing config
 ```
+
+> [!WARNING]
+> Even though we aren't connecting to a real AWS account, the environment variables are still needed.
 
 ### Update code
 
@@ -424,6 +674,9 @@ Run this command to start an interactive shell:
 ```shell
 docker compose run -it --rm --no-deps --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 ```
+
+> [!TIP]
+> The `--no-deps` makes sure we are only running the `lambda` container and ignoring any others.
 
 Install the SDK:
 
@@ -450,6 +703,9 @@ const client = new S3Client({
 });
 
 export const handler: Handler = async (event, context) => {
+  console.log("Hello world!");
+  console.log({ event, context });
+
   try {
     const command = new ListBucketsCommand({});
     const response = await client.send(command);
@@ -475,16 +731,21 @@ export const handler: Handler = async (event, context) => {
 Run the following command:
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit --build
 ```
+
+> [!NOTE]
+> During this build you'll notice both the `npm ci` and `npm run build` layers are rebuilt.  
+> Also, as we haven't actually created any buckets, receiving an empty array is the correct response.
 
 ---
 
-## 7. Bonus: Swapping runtimes
+## 7. Swapping runtimes
 
 **Goal:** Demonstrate the versatility of Docker by swapping to Python.
 
-One of the biggest advantages of developing Lambdas with Docker is that the infrastructure pattern remains exactly the same, regardless of the language you use.
+> [!TIP]
+> One of the biggest advantages of developing Lambdas with Docker is that the infrastructure pattern remains exactly the same, regardless of the language you use.
 
 ### Create a Python `Dockerfile`
 
@@ -517,10 +778,14 @@ services:
     build: ./python
 ```
 
+> [!NOTE]
+> Notice how we haven't actually changed anything else within the Lambda setup.  
+> Despite using a different runtime, the way in which the Lambda is executed/invoked is exactly the same.
+
 ### Run it
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit --build
 ```
 
 > [!NOTE]
@@ -534,11 +799,56 @@ docker compose up --build --abort-on-container-exit
 
 Since we are done with the workshop, let's remove the resources we created.
 
-Run the following command to stop all services, remove the containers/networks, and delete all images used by this project (including the Node/Python base images, LocalStack, and the custom image we built):
+Run the following command:
+
+```shell
+docker compose ps -a
+```
+
+> [!NOTE]
+> Even though they're not running, we still have this images sitting there doing nothing.
+
+Run the following command:
+
+```shell
+docker compose images
+```
+
+> [!NOTE]
+> We also have these images which are taking up resources on our machine.
+
+Run the following command:
 
 ```shell
 docker compose down --rmi all
 ```
+
+> [!NOTE]
+> This stops all services, removes the containers/networks, and deletes all images used by this project (including cURL, LocalStack, and the custom image we built).
+
+<!--  -->
+
+> [!TIP]
+> You will likely have a number of dangling images where we've made changes through out this workshop, run the following to clean them up:
+>
+> ```shell
+> docker image prune
+> ```
+
+<!--  -->
+
+> [!WARNING]
+> If you followed the prerequisites to run `docker load` this command will not actually remove all images, the `lambda/node` and `lambda/python` images still exist.
+>
+> To remove these you'll need to run the following:
+>
+> ```shell
+> docker rmi public.ecr.aws/lambda/nodejs:24
+> ```
+>
+> ```shell
+> docker rmi public.ecr.aws/lambda/python:3.14
+> ```
 
 ---
 
