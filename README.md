@@ -240,17 +240,30 @@ docker compose up --build --abort-on-container-exit
 
 ### Add environment variables
 
-Update `./nodejs/Dockerfile`:
+Update `./docker-compose.yaml`:
 
-```Dockerfile
-ENV AWS_LAMBDA_FUNCTION_MEMORY_SIZE=128
-ENV AWS_LAMBDA_FUNCTION_TIMEOUT=3
-ENV AWS_LAMBDA_LOG_FORMAT=JSON
+```yaml
+services:
+  # ... existing config
+  lambda:
+    build: ./nodejs
+    environment:
+      AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
+      AWS_LAMBDA_FUNCTION_TIMEOUT: 3
+      AWS_LAMBDA_LOG_FORMAT: JSON
 ```
 
-### Create an event file
+### Create the events subdirectory
 
-Create `./events/test.json` in the root (keep events outside the code folder):
+Create `./events` in the root (keep events outside the code folder):
+
+```shell
+mkdir ./events
+```
+
+### Create a custom event file
+
+Create `./events/custom.json`:
 
 ```json
 {
@@ -259,26 +272,43 @@ Create `./events/test.json` in the root (keep events outside the code folder):
 }
 ```
 
+### Create API Gateway event file
+
+Create `./events/api-gateway.json`:
+
+```json
+{
+  "resource": "/",
+  "path": "/",
+  "httpMethod": "POST",
+  "body": "{\"user\": \"Alice\"}",
+  "isBase64Encoded": false
+}
+```
+
 ### Inject the event
 
 Update `docker-compose.yaml`:
 
 ```yaml
-curl:
-  # ... existing config
-  command:
-    - -s
-    - -d
-    - ${LAMBDA_INPUT:-{}}
-    - http://lambda:8080/2015-03-31/functions/function/invocations
-  volumes:
+services:
+  curl:
+    # ... existing config
+    command:
+      - -s
+      - -d
+      - ${LAMBDA_INPUT:-{}}
+      - http://lambda:8080/2015-03-31/functions/function/invocations
+volumes:
     - ./events:/events:ro
+  # ... existing config
 ```
 
 ### Test with data
 
 ```shell
-LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-container-exit
+LAMBDA_INPUT=@/events/custom.json docker compose up --build --abort-on-container-exit
+LAMBDA_INPUT=@/events/api-gateway.json docker compose up --build --abort-on-container-exit
 ```
 
 ---
