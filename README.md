@@ -105,6 +105,17 @@ services:
     build: ./nodejs
 ```
 
+### Run the initial build
+
+Run the following command:
+
+```shell
+docker compose build
+```
+
+> [!NOTE]
+> At this stage, if you loaded the Docker images as part of the prerequisites, if you run `docker images` you should see the `lambda/nodejs` image as well as a new image which is the same size.
+
 ### Initialise the container
 
 Run this command to start an interactive shell:
@@ -166,6 +177,7 @@ exit
 
 > [!NOTE]
 > At this stage, we no longer need the interactive shell and can return to the code editor.
+> Even though dependencies have been installed, if you run `docker images` again, you'll see the image size hasn't changed because the `node_modules` were written to your local volume, not via an image layer.
 
 ### Configure TypeScript
 
@@ -208,6 +220,9 @@ Update `nodejs/package.json` scripts:
 ```json
 "build": "tsc"
 ```
+
+> [!NOTE]
+> At this stage we have the main building blocks for the application, but our runtime doesn't know what to do with them.
 
 ---
 
