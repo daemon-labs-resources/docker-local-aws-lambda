@@ -734,11 +734,12 @@ docker compose up --abort-on-container-exit --build
 
 ---
 
-## 7. Bonus: Swapping runtimes
+## 7. Swapping runtimes
 
 **Goal:** Demonstrate the versatility of Docker by swapping to Python.
 
-One of the biggest advantages of developing Lambdas with Docker is that the infrastructure pattern remains exactly the same, regardless of the language you use.
+> [!TIP]
+> One of the biggest advantages of developing Lambdas with Docker is that the infrastructure pattern remains exactly the same, regardless of the language you use.
 
 ### Create a Python `Dockerfile`
 
@@ -770,6 +771,10 @@ services:
   lambda:
     build: ./python
 ```
+
+> [!NOTE]
+> Notice how we haven't actually changed anything else within the Lambda setup.  
+> Despite using a different runtime, the way in which the Lambda is executed/invoked is exactly the same.
 
 ### Run it
 
