@@ -239,6 +239,10 @@ build
 node_modules
 ```
 
+> [!NOTE]
+> We're makeing sure that no matter where we're building the image it never loads in any built files or local `node_modules`.  
+> That way, whenever we're building it is done in an identical way and reduces the possibility of "it worked on my machine".
+
 ### Update `Dockerfile`
 
 Update `nodejs/Dockerfile`:
@@ -256,6 +260,35 @@ RUN npm run build
 
 CMD [ "build/index.handler" ]
 ```
+
+> [!NOTE]
+> As we're now doing the dependency install as part of the build, when you run `docker images` you'll notice our Docker image has increased in size.
+>
+> ```shell
+> $ docker images       
+> REPOSITORY                     TAG       IMAGE ID       CREATED         SIZE
+> your-lambda                    latest    05b92630088f   3 seconds ago   483MB
+> public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
+> ```
+
+> [!TIP]
+> When running `docker images` you'll notice that we have got a dangling image that looks a bit like this:
+> 
+> ```shell
+> $ docker images       
+> REPOSITORY                     TAG       IMAGE ID       CREATED         SIZE
+> your-lambda                    latest    05b92630088f   3 seconds ago   483MB
+> public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
+> <none>                         <none>    17e6c55f785f   3 days ago      449MB
+> ```
+>
+> When you rebuilt the image, Docker moved the "nametag" to your new version, leaving the old version behind as a nameless orphan.
+> 
+> Any dangling images can be cleaned with the following command:
+> 
+> ```shell
+> docker image prune
+> ```
 
 ### Update Lambda healthcheck
 
