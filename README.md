@@ -44,7 +44,7 @@ docker images
 
 > [!NOTE]
 > You should now see four images listed.
->  
+>
 > ```shell
 > $ docker images
 > REPOSITORY                     TAG       IMAGE ID       CREATED        SIZE
@@ -53,7 +53,7 @@ docker images
 > public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago     449MB
 > curlimages/curl                latest    26c487d15124   2 weeks ago    24.5MB
 > ```
->  
+>
 > _Image IDs, created and sizes may vary._
 
 ---
@@ -127,9 +127,11 @@ docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 > [!WARNING]
 > Due to AWS not creating multi-platform images we need to start an interactive shell rather than passing in commands.  
 > For example, if we were to run the following command:
+>
 > ```shell
 > docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda node --version
 > ```
+>
 > In some cases, we would receive the error `/var/lang/bin/node: /var/lang/bin/node: cannot execute binary file`.
 
 ### Image check
@@ -260,7 +262,7 @@ CMD [ "build/index.handler" ]
 > As we're now doing the dependency install as part of the build, when you run `docker images` you'll notice our Docker image has increased in size.
 >
 > ```shell
-> $ docker images       
+> $ docker images
 > REPOSITORY                     TAG       IMAGE ID       CREATED         SIZE
 > your-lambda                    latest    05b92630088f   3 seconds ago   483MB
 > public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
@@ -268,9 +270,9 @@ CMD [ "build/index.handler" ]
 
 > [!TIP]
 > When running `docker images` you'll notice that we have got a dangling image that looks a bit like this:
-> 
+>
 > ```shell
-> $ docker images       
+> $ docker images
 > REPOSITORY                     TAG       IMAGE ID       CREATED         SIZE
 > your-lambda                    latest    05b92630088f   3 seconds ago   483MB
 > public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
@@ -278,9 +280,9 @@ CMD [ "build/index.handler" ]
 > ```
 >
 > When you rebuilt the image, Docker moved the "nametag" to your new version, leaving the old version behind as a nameless orphan.
-> 
+>
 > Any dangling images can be cleaned with the following command:
-> 
+>
 > ```shell
 > docker image prune
 > ```
@@ -417,8 +419,8 @@ docker compose up --abort-on-container-exit
 
 > [!NOTE]
 > On this execution you'll see that the `curl` container received `Task timed out after 0.00 seconds`.  
-> Find the Lambda `REPORT` again and you'll see `Init Duration`, `Duration` and `Billed Duration` are all set to `0 ms`.  
-> 
+> Find the Lambda `REPORT` again and you'll see `Init Duration`, `Duration` and `Billed Duration` are all set to `0 ms`.
+>
 > **Be sure to set `AWS_LAMBDA_FUNCTION_TIMEOUT` back to `3` now.**
 
 ### Create the events subdirectory
@@ -570,7 +572,7 @@ docker compose up --abort-on-container-exit --build
 > => CACHED [2/5] COPY ./package*.json /var/task
 > => CACHED [3/5] RUN npm ci
 > => [4/5] COPY ./ /var/task
-> => [5/5] RUN npm run build    
+> => [5/5] RUN npm run build
 > ```
 
 ### Multi-stage build
@@ -793,23 +795,49 @@ docker compose up --abort-on-container-exit --build
 
 Since we are done with the workshop, let's remove the resources we created.
 
-Run the following command to stop all services, remove the containers/networks, and delete all images used by this project (including the Node/Python base images, LocalStack, and the custom image we built):
+Run the following command:
+
+```shell
+docker compose ps -a
+```
+
+> [!NOTE]
+> Even though they're not running, we still have this images sitting there doing nothing.
+
+Run the following command:
+
+```shell
+docker compose images
+```
+
+> [!NOTE]
+> We also have these images which are taking up resources on our machine.
+
+Run the following command to stop all services, remove the containers/networks, and delete all images used by this project (including cURL, LocalStack, and the custom image we built):
 
 ```shell
 docker compose down --rmi all
 ```
 
+> [!TIP]
+> You will likely have a number of dangling images where we've made changes through out this workshop, run the following to clean them up:
+>
+> ```shell
+> docker image prune
+> ```
+
 > [!WARNING]
 > If you followed the prerequisites to run `docker load` this command will not actually remove all images, the `lambda/node` and `lambda/python` images still exist.
->  
+>
 > To remove these you'll need to run the following:
+>
 > ```shell
 > docker rmi public.ecr.aws/lambda/nodejs:24
 > ```
+>
 > ```shell
 > docker rmi public.ecr.aws/lambda/python:3.14
 > ```
-
 
 ---
 
