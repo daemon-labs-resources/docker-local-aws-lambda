@@ -73,12 +73,12 @@ mkdir -p ~/Documents/daemon-labs/docker-aws-lambda
 We keep our application code separate from infrastructure config.
 
 ```shell
-mkdir nodejs
+mkdir ./nodejs
 ```
 
 ### Create the `Dockerfile`
 
-Create the file at `./nodejs/Dockerfile` (inside the subdirectory).
+Create the file at `nodejs/Dockerfile` (inside the subdirectory).
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:24
@@ -96,10 +96,18 @@ services:
 
 ### Initialise the container
 
-Run this command to start an interactive shell.
+Run this command to start an interactive shell:
 
 ```shell
 docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda
+```
+
+### Image check
+
+Run the following command:
+
+```shell
+node --version
 ```
 
 ---
@@ -130,7 +138,7 @@ exit
 
 ### Configure TypeScript
 
-Create `./nodejs/tsconfig.json` locally:
+Create `nodejs/tsconfig.json` locally:
 
 ```json
 {
@@ -143,12 +151,12 @@ Create `./nodejs/tsconfig.json` locally:
 
 ### Create the handler
 
-Create `./nodejs/src/index.ts`:
+Create `nodejs/src/index.ts`:
 
 ```typescript
 import { Handler } from "aws-lambda";
 
-export const handler: Handler = (event, context) => {
+export const handler: Handler = async (event, context) => {
   console.log("Hello world!");
   console.log({ event, context });
 
@@ -161,12 +169,10 @@ export const handler: Handler = (event, context) => {
 
 ### Add build script
 
-Update `./nodejs/package.json` scripts:
+Update `nodejs/package.json` scripts:
 
 ```json
-"scripts": {
-  "build": "tsc"
-},
+"build": "tsc"
 ```
 
 ---
@@ -177,7 +183,7 @@ Update `./nodejs/package.json` scripts:
 
 ### Add `.dockerignore`
 
-Create `./nodejs/.dockerignore` (inside the subdirectory).  
+Create `nodejs/.dockerignore` (inside the subdirectory).  
 This is critical because our build context is now that specific folder.
 
 ```plaintext
@@ -187,14 +193,10 @@ node_modules
 
 ### Update `Dockerfile`
 
-Update `./nodejs/Dockerfile`.  
-Notice that the `COPY` paths are cleaner now because they are relative to the `nodejs` folder.
+Update `nodejs/Dockerfile`:
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:24
-
-HEALTHCHECK --interval=1s --timeout=1s --retries=30 \
-    CMD [ "curl", "-I", "http://localhost:8080" ]
 
 COPY ./package*.json ${LAMBDA_TASK_ROOT}
 
@@ -205,6 +207,21 @@ COPY ./ ${LAMBDA_TASK_ROOT}
 RUN npm run build
 
 CMD [ "build/index.handler" ]
+```
+
+### Update Lambda healthcheck
+
+Update `docker-compose.yaml`:
+
+```yaml
+lambda:
+  build: ./nodejs
+  healthcheck:
+    test:
+      - CMD
+      - curl
+      - -I
+      - http://localhost:8080
 ```
 
 ### Add cURL service
@@ -240,13 +257,13 @@ docker compose up --build --abort-on-container-exit
 
 ### Add environment variables
 
-Update `./docker-compose.yaml`:
+Update `docker-compose.yaml`:
 
 ```yaml
 services:
   # ... existing config
   lambda:
-    build: ./nodejs
+    # ... existing config
     environment:
       AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
       AWS_LAMBDA_FUNCTION_TIMEOUT: 3
@@ -255,7 +272,7 @@ services:
 
 ### Create the events subdirectory
 
-Create `./events` in the root (keep events outside the code folder):
+Create the events subdirectory in the root (keep events outside the code folder):
 
 ```shell
 mkdir ./events
@@ -263,7 +280,7 @@ mkdir ./events
 
 ### Create a custom event file
 
-Create `./events/custom.json`:
+Create `events/custom.json`:
 
 ```json
 {
@@ -274,7 +291,7 @@ Create `./events/custom.json`:
 
 ### Create API Gateway event file
 
-Create `./events/api-gateway.json`:
+Create `events/api-gateway.json`:
 
 ```json
 {
@@ -300,14 +317,21 @@ services:
       - ${LAMBDA_INPUT:-{}}
       - http://lambda:8080/2015-03-31/functions/function/invocations
 volumes:
-    - ./events:/events:ro
+  - ./events:/events:ro
   # ... existing config
 ```
 
 ### Test with data
 
 ```shell
+docker compose up --build --abort-on-container-exit
+```
+
+```shell
 LAMBDA_INPUT=@/events/custom.json docker compose up --build --abort-on-container-exit
+```
+
+```shell
 LAMBDA_INPUT=@/events/api-gateway.json docker compose up --build --abort-on-container-exit
 ```
 
@@ -319,7 +343,7 @@ LAMBDA_INPUT=@/events/api-gateway.json docker compose up --build --abort-on-cont
 
 ### Multi-stage build
 
-Replace `./nodejs/Dockerfile` with this optimised version:
+Replace `nodejs/Dockerfile` with this optimised version:
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:24 AS base
@@ -335,13 +359,6 @@ COPY ./ ${LAMBDA_TASK_ROOT}
 RUN npm run build
 
 FROM base
-
-ENV AWS_LAMBDA_FUNCTION_MEMORY_SIZE=128
-ENV AWS_LAMBDA_FUNCTION_TIMEOUT=3
-ENV AWS_LAMBDA_LOG_FORMAT=JSON
-
-HEALTHCHECK --interval=1s --timeout=1s --retries=30 \
-    CMD [ "curl", "-I", "http://localhost:8080" ]
 
 COPY --from=builder ${LAMBDA_TASK_ROOT}/package*.json ${LAMBDA_TASK_ROOT}
 
@@ -366,15 +383,20 @@ docker compose up --build --abort-on-container-exit
 
 **Goal:** Connect to LocalStack.
 
-### Add LocalStack Service to `./docker-compose.yaml`
+### Add LocalStack Service to `docker-compose.yaml`
 
 ```yaml
 localstack:
   image: localstack/localstack
-  ports:
-    - 4566:4566
-  environment:
-    - SERVICES=s3
+  healthcheck:
+    test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:4566/_localstack/health
+    interval: 1s
+    timeout: 1s
+    retries: 30
 ```
 
 ### Update Lambda config
@@ -383,23 +405,39 @@ Update `docker-compose.yaml`:
 
 ```yaml
 depends_on:
-  - localstack
+  localstack:
+    condition: service_healthy
 environment:
-  - AWS_ENDPOINT_URL=http://localstack:4566
-  - AWS_ACCESS_KEY_ID=test
-  - AWS_SECRET_ACCESS_KEY=test
-  - AWS_REGION=us-east-1
+  AWS_LAMBDA_FUNCTION_MEMORY_SIZE: 128
+  AWS_LAMBDA_FUNCTION_TIMEOUT: 3
+  AWS_LAMBDA_LOG_FORMAT: JSON
+  AWS_ENDPOINT_URL: http://localstack:4566
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_ACCESS_KEY_ID: test
+  AWS_REGION: us-east-1
 ```
 
 ### Update code
 
-First, install the SDK inside `./nodejs` (or on your host machine if you have Node installed):
+Run this command to start an interactive shell:
+
+```shell
+docker compose run -it --rm --no-deps --entrypoint /bin/sh -v ./nodejs:/var/task lambda
+```
+
+Install the SDK:
 
 ```shell
 npm install @aws-sdk/client-s3
 ```
 
-Next, update `./nodejs/src/index.ts` with the S3 client logic:
+Exit the container
+
+```shell
+exit
+```
+
+Next, update `nodejs/src/index.ts` with the S3 client logic:
 
 ```typescript
 import { Handler } from "aws-lambda";
@@ -444,13 +482,13 @@ docker compose up --build --abort-on-container-exit
 
 ## 7. Bonus: Swapping runtimes
 
-\*_Goal:_ Demonstrate the versatility of Docker by swapping to Python.
+**Goal:** Demonstrate the versatility of Docker by swapping to Python.
 
 One of the biggest advantages of developing Lambdas with Docker is that the infrastructure pattern remains exactly the same, regardless of the language you use.
 
 ### Create a Python `Dockerfile`
 
-Create `./python/Dockerfile` with the following content:
+Create `python/Dockerfile` with the following content:
 
 ```Dockerfile
 FROM public.ecr.aws/lambda/python:3.14
@@ -462,7 +500,7 @@ CMD [ "app.handler" ]
 
 ### Create the Python handler
 
-Create the handler file at `./python/app.py`:
+Create the handler file at `python/app.py`:
 
 ```python
 def handler(event, context):
