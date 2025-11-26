@@ -528,6 +528,20 @@ docker compose up --build --abort-on-container-exit
 
 ---
 
+## 8. Cleanup
+
+**Goal:** Remove containers and reclaim disk space.
+
+Since we are done with the workshop, let's remove the resources we created.
+
+Run the following command to stop all services, remove the containers/networks, and delete all images used by this project (including the Node/Python base images, LocalStack, and the custom image we built):
+
+```shell
+docker compose down --rmi all
+```
+
+---
+
 ## 🎉 Congratulations
 
 You have built a clean, modular, serverless development environment.
