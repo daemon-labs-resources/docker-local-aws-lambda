@@ -305,6 +305,26 @@ lambda:
       - http://localhost:8080
 ```
 
+> [!TIP]
+> The healthcheck allows Docker (and us) to know when a container is up and running as expected.  
+> If you were to run `docker ps` in a different terminal window while our containers were starting up you might see the following:
+>
+> ```shell
+> $ docker ps
+> CONTAINER ID   IMAGE             COMMAND                  CREATED        STATUS                                     PORTS     NAMES
+> bf2696aeaabf   solution-lambda   "/lambda-entrypoint.…"   1 second ago   Up Less than a second (health: starting)             your-lambda-1
+> ```
+>
+> If you ran `docker ps` once the container was able to pass the healthcheck you would hopefully see the following:
+>
+> ```shell
+> $ docker ps
+> CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS                    PORTS     NAMES
+> bf2696aeaabf   solution-lambda   "/lambda-entrypoint.…"   36 seconds ago   Up 35 seconds (healthy)             your-lambda-1
+> ```
+>
+> _If the container wasn't able to pass the healthcheck then you would eventually see `unhealthy` instead._
+
 ### Add cURL service
 
 Update `docker-compose.yaml` (in the root) to include a service that triggers our Lambda.
