@@ -241,7 +241,7 @@ node_modules
 ```
 
 > [!NOTE]
-> We're makeing sure that no matter where we're building the image it never loads in any built files or local `node_modules`.  
+> We're making sure that no matter where we're building the image it never loads in any built files or local `node_modules`.  
 > That way, whenever we're building it is done in an identical way and reduces the possibility of "it worked on my machine".
 
 ### Update `Dockerfile`
@@ -267,7 +267,6 @@ CMD [ "build/index.handler" ]
 > your-lambda                    latest    05b92630088f   3 seconds ago   483MB
 > public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago      449MB
 > ```
-
 > [!TIP]
 > When running `docker images` you'll notice that we have got a dangling image that looks a bit like this:
 >
@@ -456,7 +455,7 @@ Create `events/api-gateway.json`:
 ```
 
 > [!NOTE]
-> Lambdas can technically receive any payload, but are can also be invoked from other AWS services, so it is very useful to replicate this as much as possible.
+> Lambdas can technically receive any payload, but can also be invoked from other AWS services, so it is very useful to replicate this as much as possible.
 
 ### Inject the event
 
@@ -530,7 +529,6 @@ docker compose up --abort-on-container-exit --build
 
 > [!NOTE]
 > Now, each time we run the containers, Docker is re-building everything and picking up any new changes.
-
 > [!TIP]
 > Even though Docker is technically re-building each and every time, if there are no new changes, Docker will use cached layers resulting in faster executions.
 
@@ -821,14 +819,12 @@ docker compose down --rmi all
 
 > [!NOTE]
 > This stops all services, removes the containers/networks, and deletes all images used by this project (including cURL, LocalStack, and the custom image we built).
-
 > [!TIP]
 > You will likely have a number of dangling images where we've made changes through out this workshop, run the following to clean them up:
 >
 > ```shell
 > docker image prune
 > ```
-
 > [!WARNING]
 > If you followed the prerequisites to run `docker load` this command will not actually remove all images, the `lambda/node` and `lambda/python` images still exist.
 >
