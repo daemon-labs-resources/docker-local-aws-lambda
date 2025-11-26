@@ -183,8 +183,7 @@ Update `nodejs/package.json` scripts:
 
 ### Add `.dockerignore`
 
-Create `nodejs/.dockerignore` (inside the subdirectory).  
-This is critical because our build context is now that specific folder.
+Create `nodejs/.dockerignore` (inside the subdirectory):
 
 ```plaintext
 build
@@ -239,8 +238,7 @@ services:
       - -s
       - -d {}
       - http://lambda:8080/2015-03-31/functions/function/invocations
-  lambda:
-    build: ./nodejs
+  # ... existing config
 ```
 
 ### Run the stack
@@ -316,8 +314,8 @@ services:
       - -d
       - ${LAMBDA_INPUT:-{}}
       - http://lambda:8080/2015-03-31/functions/function/invocations
-volumes:
-  - ./events:/events:ro
+    volumes:
+      - ./events:/events:ro
   # ... existing config
 ```
 
@@ -450,6 +448,9 @@ const client = new S3Client({
 });
 
 export const handler: Handler = async (event, context) => {
+  console.log("Hello world!");
+  console.log({ event, context });
+
   try {
     const command = new ListBucketsCommand({});
     const response = await client.send(command);
@@ -539,6 +540,17 @@ Run the following command to stop all services, remove the containers/networks, 
 ```shell
 docker compose down --rmi all
 ```
+
+> [!WARNING]
+> If you followed the prerequisites to run `docker load` this command will not actually remove all images, the `lambda/node` and `lambda/python` images still exist.  
+> To remove these you'll need to run the following:
+> ```shell
+> docker rmi public.ecr.aws/lambda/nodejs:24
+> ```
+> ```shell
+> docker rmi public.ecr.aws/lambda/python:3.14
+> ```
+
 
 ---
 
