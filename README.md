@@ -208,7 +208,7 @@ export const handler: Handler = async (event, context) => {
 
   return {
     statusCode: 200,
-    body: "Hello World!",
+    body: { event, context },
   };
 };
 ```
@@ -440,8 +440,7 @@ Create `events/custom.json`:
 
 ```json
 {
-  "user": "Alice",
-  "action": "login"
+  "user": "Alice"
 }
 ```
 
@@ -458,6 +457,9 @@ Create `events/api-gateway.json`:
   "isBase64Encoded": false
 }
 ```
+
+> [!NOTE]
+> Lambdas can technically receive any payload, but are can also be invoked from other AWS services, so it is very useful to replicate this as much as possible.
 
 ### Inject the event
 
@@ -480,16 +482,20 @@ services:
 ### Test with data
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit
 ```
 
 ```shell
-LAMBDA_INPUT=@/events/custom.json docker compose up --build --abort-on-container-exit
+LAMBDA_INPUT=@/events/custom.json docker compose up --abort-on-container-exit
 ```
 
 ```shell
-LAMBDA_INPUT=@/events/api-gateway.json docker compose up --build --abort-on-container-exit
+LAMBDA_INPUT=@/events/api-gateway.json docker compose up --abort-on-container-exit
 ```
+
+> [!NOTE]
+> With each of these commands, you'll notice that the `curl` container receives a slightly different response where the event changes.  
+> The first command we didn't include the `LAMBDA_INPUT` attribute, so you `docker-compose.yaml` default the input to `{}`.
 
 ---
 
