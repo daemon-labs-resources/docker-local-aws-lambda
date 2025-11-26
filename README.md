@@ -349,7 +349,7 @@ services:
 > [!NOTE]
 > As we have the healthceck in place, we can actually tell the `curl` container not to start until it gets that healthy response.
 
-### Try running the stack
+### Run the stack
 
 Run the following command:
 
@@ -358,10 +358,10 @@ docker compose up
 ```
 
 > [!WARNING]
-> The problem with this specific command is that the Lambda continues to run despite the cURL container running and exiting.
+> The problem with this specific command is that the Lambda continues to run despite the cURL container running and exiting.  
 > **Exit your container by pressing Ctrl+C on your keyboard.**
 
-### Run the stack
+### Tell Docker to terminate the containers
 
 Run the following command:
 
