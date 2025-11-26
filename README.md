@@ -113,6 +113,14 @@ Run this command to start an interactive shell:
 docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 ```
 
+> [!WARNING]
+> Due to AWS not creating multi-platform images we need to start an interactive shell rather than passing in commands.  
+> For example, if we were to run the following command:
+> ```shell
+> docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda node --version
+> ```
+> In some cases, we would receive the error `/var/lang/bin/node: /var/lang/bin/node: cannot execute binary file`.
+
 ### Image check
 
 Run the following command:
