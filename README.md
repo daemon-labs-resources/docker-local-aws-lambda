@@ -813,11 +813,14 @@ docker compose images
 > [!NOTE]
 > We also have these images which are taking up resources on our machine.
 
-Run the following command to stop all services, remove the containers/networks, and delete all images used by this project (including cURL, LocalStack, and the custom image we built):
+Run the following command:
 
 ```shell
 docker compose down --rmi all
 ```
+
+> [!NOTE]
+> This stops all services, removes the containers/networks, and deletes all images used by this project (including cURL, LocalStack, and the custom image we built).
 
 > [!TIP]
 > You will likely have a number of dangling images where we've made changes through out this workshop, run the following to clean them up:
