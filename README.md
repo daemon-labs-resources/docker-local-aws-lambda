@@ -44,6 +44,15 @@ docker images
 
 > [!NOTE]
 > You should now see four images listed.
+>  
+> ```shell
+> $ docker images
+> REPOSITORY                     TAG       IMAGE ID       CREATED        SIZE
+> localstack/localstack          latest    de4d3256398a   25 hours ago   1.17GB
+> public.ecr.aws/lambda/python   3.14      983ca119258a   3 days ago     584MB
+> public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago     449MB
+> curlimages/curl                latest    26c487d15124   2 weeks ago    24.5MB
+> ```
 
 ---
 
