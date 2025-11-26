@@ -203,7 +203,6 @@ Create `nodejs/src/index.ts`:
 import { Handler } from "aws-lambda";
 
 export const handler: Handler = async (event, context) => {
-  console.log("Hello world!");
   console.log({ event, context });
 
   return {
@@ -404,7 +403,7 @@ docker compose up --abort-on-container-exit
 > [!NOTE]
 > On this execution you'll be able to confirm two of the values are working.  
 > Find the Lambda `REPORT` log and you'll now see `Memory Size` and `Max Memory Used` are set to `128 MB` instead of the previous `3008 MB`.  
-> Find the `Hello world!` log and you'll see it has now switched to a JSON structured log rather than just text.
+> Find the log for `event` and `context` and you'll see it has now switched to a JSON structured log rather than just broken text.
 
 ### Check the timeout
 
@@ -496,6 +495,46 @@ LAMBDA_INPUT=@/events/api-gateway.json docker compose up --abort-on-container-ex
 > [!NOTE]
 > With each of these commands, you'll notice that the `curl` container receives a slightly different response where the event changes.  
 > The first command we didn't include the `LAMBDA_INPUT` attribute, so you `docker-compose.yaml` default the input to `{}`.
+
+### Add a new log
+
+Update `nodejs/src/index.ts` to include a new log:
+
+```typescript
+import { Handler } from "aws-lambda";
+
+export const handler: Handler = async (event, context) => {
+  console.log("Hello world!");
+  console.log({ event, context });
+
+  return {
+    statusCode: 200,
+    body: { event, context },
+  };
+};
+```
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!WARNING]
+> Where's the log? Nothing has actually updated.  
+> As we're running the containers and stopping them each time, we need to let Docker know about any changes.
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit --build
+```
+
+> [!NOTE]
+> Now, each time we run the containers, Docker is re-building everything and picking up any new changes.
+
+> [!TIP]
+> Even though Docker is technically re-building each and every time, if there are no new changes, Docker will use cached layers resulting in faster executions.
 
 ---
 
