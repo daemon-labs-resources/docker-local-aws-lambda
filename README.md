@@ -13,15 +13,13 @@ Before beginning this workshop, please ensure your environment is correctly set 
 
 ➡️ **[Prerequisites guide](https://github.com/daemon-labs-resources/prerequisites)**
 
-### Retrieve Docker images
-
-#### Load Docker images
+### Load Docker images
 
 > [!CAUTION]
 > This only works when attending a workshop in person.  
 > Due to having a number of people trying to retrieve Docker images at the same time, this allows for a more efficient way.
 >
-> If you are **NOT** in an in-person workshop, see [pull docker images](#pull-docker-images).
+> If you are **NOT** in an in-person workshop, continue to the [workshop](#1-the-foundation), Docker images will be pulled as needed.
 
 Once the facilitator has given you an IP address, open `http://<IP-ADDRESS>:8000` in your browser.
 
@@ -34,22 +32,6 @@ Run the following command:
 
 ```shell
 docker load -i ~/Downloads/workshop-images.tar
-```
-
-#### Pull Docker images
-
-> [!CAUTION]
-> Only use this approach if you are running through this workshop on your own.
->
-> If you are in an in-person workshop, see [load docker images](#load-docker-images).
-
-Run the following command:
-
-```shell
-docker pull public.ecr.aws/lambda/nodejs:24
-docker pull public.ecr.aws/lambda/python:3.14
-docker pull curlimages/curl
-docker pull localstack/localstack
 ```
 
 ### Validate Docker images
@@ -301,9 +283,9 @@ LAMBDA_INPUT=@/events/test.json docker compose up --build --abort-on-container-e
 
 ---
 
-## 5. Optimisation & versatility
+## 5. Optimisation
 
-**Goal:** Prepare for production and demonstrate language flexibility.
+**Goal:** Prepare for production with multi-stage builds.
 
 ### Multi-stage build
 
@@ -340,31 +322,12 @@ COPY --from=builder ${LAMBDA_TASK_ROOT}/build ${LAMBDA_TASK_ROOT}/build
 CMD [ "build/index.handler" ]
 ```
 
-### Bonus: Python swap
+### Test the optimised build
 
-Create `./python/app.py`:
+Run the following command to ensure everything still works:
 
-```python
-def handler(event, context):
-    return "Hello World!"
-```
-
-Create `./python/Dockerfile`:
-
-```Dockerfile
-FROM public.ecr.aws/lambda/python:3.14
-
-COPY ./ ${LAMBDA_TASK_ROOT}
-
-CMD [ "app.handler" ]
-```
-
-Update `docker-compose.yaml` to swap the build context:
-
-```yaml
-services:
-  lambda:
-    build: ./python
+```shell
+docker compose up --build --abort-on-container-exit
 ```
 
 ---
@@ -446,6 +409,54 @@ Run the following command:
 ```shell
 docker compose up --build --abort-on-container-exit
 ```
+
+---
+
+## 7. Bonus: Swapping runtimes
+
+\*_Goal:_ Demonstrate the versatility of Docker by swapping to Python.
+
+One of the biggest advantages of developing Lambdas with Docker is that the infrastructure pattern remains exactly the same, regardless of the language you use.
+
+### Create a Python `Dockerfile`
+
+Create `./python/Dockerfile` with the following content:
+
+```Dockerfile
+FROM public.ecr.aws/lambda/python:3.14
+
+COPY ./ ${LAMBDA_TASK_ROOT}
+
+CMD [ "app.handler" ]
+```
+
+### Create the Python handler
+
+Create the handler file at `./python/app.py`:
+
+```python
+def handler(event, context):
+    return "Hello World!"
+```
+
+### Update `docker-compose.yaml`
+
+Update the `lambda` service in `docker-compose.yaml` to point to the Python folder:
+
+```yaml
+services:
+  lambda:
+    build: ./python
+```
+
+### Run it
+
+```shell
+docker compose up --build --abort-on-container-exit
+```
+
+> [!NOTE]
+> You will see the build process switch to pulling the Python base image, but the curl command and event injection work exactly the same way.
 
 ---
 
