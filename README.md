@@ -566,7 +566,7 @@ docker compose up --abort-on-container-exit --build
 > In this iteration, as `npm ci` and `npm run build` are two different layers, when one changes it doesn't impact the other.  
 > For example, if we update our code without updating any packages, the `npm ci` can still use it's cached version where as the `npm run build` will get rebuilt.
 >
-> ```shell
+> ```plaintext
 > => CACHED [2/5] COPY ./package*.json /var/task
 > => CACHED [3/5] RUN npm ci
 > => [4/5] COPY ./ /var/task
