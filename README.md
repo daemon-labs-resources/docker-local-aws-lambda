@@ -53,6 +53,8 @@ docker images
 > public.ecr.aws/lambda/nodejs   24        30d41baede74   3 days ago     449MB
 > curlimages/curl                latest    26c487d15124   2 weeks ago    24.5MB
 > ```
+>  
+> _Image IDs, created and sizes may vary._
 
 ---
 
