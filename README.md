@@ -249,13 +249,9 @@ Update `nodejs/Dockerfile`:
 ```Dockerfile
 FROM public.ecr.aws/lambda/nodejs:24
 
-COPY ./package*.json ${LAMBDA_TASK_ROOT}
-
-RUN npm ci
-
 COPY ./ ${LAMBDA_TASK_ROOT}
 
-RUN npm run build
+RUN npm ci && npm run build
 
 CMD [ "build/index.handler" ]
 ```
@@ -540,7 +536,35 @@ docker compose up --abort-on-container-exit --build
 
 ## 5. Optimisation
 
-**Goal:** Prepare for production with multi-stage builds.
+**Goal:** Prepare for production with improved caching and multi-stage builds.
+
+### Improved caching
+
+Replace `nodejs/Dockerfile` with this cached optimised version:
+
+```Dockerfile
+FROM public.ecr.aws/lambda/nodejs:24
+
+COPY ./package*.json ${LAMBDA_TASK_ROOT}
+
+RUN npm ci
+
+COPY ./ ${LAMBDA_TASK_ROOT}
+
+RUN npm run build
+
+CMD [ "build/index.handler" ]
+```
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit --build
+```
+
+> [!TIP]
+> In this iteration, as `npm ci` and `npm run build` are two different layers, when one changes it doesn't impact the other.  
+> For example, if we update our code without updating any packages, the `npm ci` can still use it's cached version where as the `npm run build` will get rebuilt.
 
 ### Multi-stage build
 
@@ -570,13 +594,15 @@ COPY --from=builder ${LAMBDA_TASK_ROOT}/build ${LAMBDA_TASK_ROOT}/build
 CMD [ "build/index.handler" ]
 ```
 
-### Test the optimised build
-
-Run the following command to ensure everything still works:
+Run the following command:
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit --build
 ```
+
+> [!NOTE]
+> In this iteration, our built image only includes the files needed to actually be executed.  
+> This means our Docker images has a reduced size but also any potential security risk of the development dependencies are removed.
 
 ---
 
@@ -679,7 +705,7 @@ export const handler: Handler = async (event, context) => {
 Run the following command:
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit --build
 ```
 
 ---
@@ -724,7 +750,7 @@ services:
 ### Run it
 
 ```shell
-docker compose up --build --abort-on-container-exit
+docker compose up --abort-on-container-exit --build
 ```
 
 > [!NOTE]
