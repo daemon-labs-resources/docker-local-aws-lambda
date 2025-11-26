@@ -393,6 +393,39 @@ services:
       AWS_LAMBDA_LOG_FORMAT: JSON
 ```
 
+### Check the updated values
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!NOTE]
+> On this execution you'll be able to confirm two of the values are working.  
+> Find the Lambda `REPORT` log and you'll now see `Memory Size: 128 MB     Max Memory Used: 128 MB` instead of the previous `Memory Size: 3008 MB    Max Memory Used: 3008 MB`.  
+> Find the `Hello world!` log and you'll see it has now switched to a JSON structured log rather than just text.
+
+### Check the timeout
+
+Update `docker-compose.yaml`:
+
+```yaml
+AWS_LAMBDA_FUNCTION_TIMEOUT: 0
+```
+
+Run the following command:
+
+```shell
+docker compose up --abort-on-container-exit
+```
+
+> [!NOTE]
+> On this execution you'll see that the `curl` container received `Task timed out after 0.00 seconds`.  
+> Find the Lambda `REPORT` again and you'll see `Init Duration: 0.00 ms  Duration: 0.00 ms       Billed Duration: 0 ms`.  
+> 
+> **Be sure to set `AWS_LAMBDA_FUNCTION_TIMEOUT` back to `3` now.**
+
 ### Create the events subdirectory
 
 Create the events subdirectory in the root (keep events outside the code folder):
