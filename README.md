@@ -403,7 +403,7 @@ docker compose up --abort-on-container-exit
 
 > [!NOTE]
 > On this execution you'll be able to confirm two of the values are working.  
-> Find the Lambda `REPORT` log and you'll now see `Memory Size: 128 MB     Max Memory Used: 128 MB` instead of the previous `Memory Size: 3008 MB    Max Memory Used: 3008 MB`.  
+> Find the Lambda `REPORT` log and you'll now see `Memory Size` and `Max Memory Used` are set to `128 MB` instead of the previous `3008 MB`.  
 > Find the `Hello world!` log and you'll see it has now switched to a JSON structured log rather than just text.
 
 ### Check the timeout
@@ -422,7 +422,7 @@ docker compose up --abort-on-container-exit
 
 > [!NOTE]
 > On this execution you'll see that the `curl` container received `Task timed out after 0.00 seconds`.  
-> Find the Lambda `REPORT` again and you'll see `Init Duration: 0.00 ms  Duration: 0.00 ms       Billed Duration: 0 ms`.  
+> Find the Lambda `REPORT` again and you'll see `Init Duration`, `Duration` and `Billed Duration` are all set to `0 ms`.  
 > 
 > **Be sure to set `AWS_LAMBDA_FUNCTION_TIMEOUT` back to `3` now.**
 
