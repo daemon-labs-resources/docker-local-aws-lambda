@@ -839,7 +839,7 @@ docker compose down --rmi all
 <!--  -->
 
 > [!TIP]
-> You will likely have a number of dangling images where we've made changes through out this workshop, run the following to clean them up:
+> You may have some dangling images where we've made changes through out this workshop, run the following to clean them up:
 >
 > ```shell
 > docker image prune
