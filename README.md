@@ -356,7 +356,7 @@ services:
 ```
 
 > [!NOTE]
-> As we have the healthceck in place, we can actually tell the `curl` container not to start until it gets that healthy response.
+> As we have the healthcheck in place, we can actually tell the `curl` container not to start until it gets that healthy response.
 
 ### Run the stack
 
