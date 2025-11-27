@@ -1,8 +1,5 @@
 services:
   nginx:
-    image: nginx:1-alpine
+    build: .
     ports:
       - 80:80
-    volumes:
-    - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    - ./src:/usr/share/nginx/html:ro
