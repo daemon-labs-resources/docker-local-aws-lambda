@@ -124,6 +124,8 @@ Run this command to start an interactive shell:
 docker compose run -it --rm --entrypoint /bin/sh -v ./nodejs:/var/task lambda
 ```
 
+<!-- --user "$(id -u):$(id -g)" -->
+
 > [!WARNING]
 > Due to AWS not creating multi-platform images we need to start an interactive shell rather than passing in commands.  
 > For example, if we were to run the following command:
@@ -258,6 +260,12 @@ RUN npm ci && npm run build
 CMD [ "build/index.handler" ]
 ```
 
+Run the following command:
+
+```shell
+docker compose build
+```
+
 > [!NOTE]
 > As we're now doing the dependency install as part of the build, when you run `docker images` you'll notice our Docker image has increased in size.
 >
@@ -271,7 +279,7 @@ CMD [ "build/index.handler" ]
 <!--  -->
 
 > [!TIP]
-> When running `docker images` you'll notice that we have got a dangling image that looks a bit like this:
+> When running `docker images` you might notice that you have got a dangling image that looks a bit like this:
 >
 > ```shell
 > $ docker images
@@ -309,12 +317,12 @@ lambda:
 
 > [!TIP]
 > The healthcheck allows Docker (and us) to know when a container is up and running as expected.  
-> If you were to run `docker ps` in a different terminal window while our containers were starting up you might see the following:
+> If you were to run `docker compose up` and then run `docker ps` in a different terminal window while our containers were starting up you might see the following:
 >
 > ```shell
 > $ docker ps
 > CONTAINER ID   IMAGE             COMMAND                  CREATED        STATUS                                     PORTS     NAMES
-> bf2696aeaabf   solution-lambda   "/lambda-entrypoint.…"   1 second ago   Up Less than a second (health: starting)             your-lambda-1
+> bf2696aeaabf   your-lambda       "/lambda-entrypoint.…"   1 second ago   Up Less than a second (health: starting)             your-lambda-1
 > ```
 >
 > If you ran `docker ps` once the container was able to pass the healthcheck you would hopefully see the following:
@@ -322,10 +330,12 @@ lambda:
 > ```shell
 > $ docker ps
 > CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS                    PORTS     NAMES
-> bf2696aeaabf   solution-lambda   "/lambda-entrypoint.…"   36 seconds ago   Up 35 seconds (healthy)             your-lambda-1
+> bf2696aeaabf   your-lambda       "/lambda-entrypoint.…"   36 seconds ago   Up 35 seconds (healthy)             your-lambda-1
 > ```
 >
 > _If the container wasn't able to pass the healthcheck then you would eventually see `unhealthy` instead._
+>
+> **If you did run `docker compose up` you will need press Ctrl+C on your keyboard to exit the container.**
 
 ### Add cURL service
 
